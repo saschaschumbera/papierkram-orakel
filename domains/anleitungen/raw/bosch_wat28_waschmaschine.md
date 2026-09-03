@@ -1,4 +1,4 @@
-# Bedienungsanleitung Bosch WAT28xxx Waschmaschine
+# Bedienungsanleitung Bosch WAT28xxx Waschmaschine (Beispieldokument, fiktiv)
 
 ## Übersicht
 

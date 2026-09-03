@@ -88,7 +88,7 @@ eigentliche Suche um:
 4. Erst jetzt kommt die KI (Claude) ins Spiel — mit einer strengen Regel:
    **„Antworte NUR mit dem, was in diesen Schnipseln steht. Wenn es da nicht
    steht, sag das ehrlich."** Deshalb steht unter jeder Aussage eine
-   Quellenangabe wie `[Quelle: baubeschreibung.pdf | S. 14]`.
+   Quellenangabe wie `[Quelle: mietvertrag_wohnung.md | §6 Kaution]`.
 
 ## Warum kann ich den Antworten trauen?
 

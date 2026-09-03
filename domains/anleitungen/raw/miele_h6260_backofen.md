@@ -1,4 +1,4 @@
-# Bedienungsanleitung Miele H6260 BP Einbaubackofen
+# Bedienungsanleitung Miele H6260 BP Einbaubackofen (Beispieldokument, fiktiv)
 
 ## Übersicht
 
