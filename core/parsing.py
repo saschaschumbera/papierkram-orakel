@@ -1,11 +1,10 @@
 """Document parsing: turns raw files into (location_label, text) sections.
 
-This is the local, free stand-in for the OCR step from the video (there,
-Mistral OCR converts PDFs to clean Markdown). pymupdf handles normal
-digital PDFs directly. For scanned/image-only pages and for standalone
-photos (JPG/PNG/HEIC -- the "Handyfoto vom Vertrag" case), we fall back to
-a local Tesseract OCR pass -- everything downstream (chunking, embedding,
-search) stays unchanged either way.
+This is the local, free stand-in for a hosted OCR step. pymupdf handles
+normal digital PDFs directly. For scanned/image-only pages and for
+standalone photos (JPG/PNG/HEIC -- the "Handyfoto vom Vertrag" case), we
+fall back to a local Tesseract OCR pass -- everything downstream (chunking,
+embedding, search) stays unchanged either way.
 """
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Orchestrates the two phases from the video:
+"""Orchestrates the two RAG phases:
 
   1. Indexing   (ingest_domain):  parse -> chunk -> embed -> store
   2. Retrieval  (answer_question): embed query -> hybrid search -> rerank

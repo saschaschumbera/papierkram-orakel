@@ -15,18 +15,17 @@ Quellenangabe (Datei + Seite/Abschnitt).
 
 ![Screenshot der Web-Chat-UI](docs/screenshot.png)
 
-Das Projekt ist die praktische Umsetzung der Konzepte aus dem Video
-["Vergiss 'Second Brains'! So baust du ECHTES KI-Wissensmanagement"](https://www.youtube.com/watch?v=S7yg98I6L7k)
-(Everlast AI / Leonard Schmedding) — nur eben alltagstauglich, lokal und
-mit einer Architektur, die sich per Ordner um beliebige neue Themenbereiche
-("Domains") erweitern lässt, ohne den Kern-Code anzufassen.
+Das Projekt setzt das klassische RAG-Muster (retrieve → rerank → generate)
+bewusst alltagstauglich und lokal um: eine Architektur, die sich per Ordner
+um beliebige neue Themenbereiche ("Domains") erweitern lässt, ohne den
+Kern-Code anzufassen.
 
 Ausführlichere Dokumentation: [einfach erklärt](docs/ANLEITUNG_EINFACH.md) ·
 [technisch](docs/ANLEITUNG_TECHNISCH.md).
 
 ## Architektur
 
-Zwei Phasen, genau wie im Video:
+Zwei Phasen:
 
 ```
 Indexierung (einmalig pro Domain, "python cli.py ingest <domain>")
@@ -52,18 +51,18 @@ Retrieval (bei jeder Frage, "python cli.py ask <domain> '...'")
                            (Prompt über stdin, nicht als Argument)
 ```
 
-| Baustein im Video | Entsprechung hier |
+| Pipeline-Schritt (typische Cloud-Lösung) | Lokale Entsprechung hier |
 |---|---|
-| OCR (Mistral OCR) | `core/parsing.py` (pymupdf + lokaler Tesseract-Fallback für Scans; Registry für weitere Dateitypen) |
+| OCR (z.B. Mistral OCR) | `core/parsing.py` (pymupdf + lokaler Tesseract-Fallback für Scans; Registry für weitere Dateitypen) |
 | Chunking | `core/chunking.py` (~700 Zeichen, ~10% Overlap, absatzweise) |
-| Embedding-Modell (Mistral Embed) | `core/embeddings.py` (lokales multilinguales Sentence-Transformer-Modell) |
-| Vektordatenbank (Supabase/pgvector) | `core/store.py` (SQLite + sqlite-vec, eine Datei pro Domain) |
+| Embedding-Modell (z.B. Mistral Embed) | `core/embeddings.py` (lokales multilinguales Sentence-Transformer-Modell) |
+| Vektordatenbank (z.B. Supabase/pgvector) | `core/store.py` (SQLite + sqlite-vec, eine Datei pro Domain) |
 | Hybrid Search (semantisch + BM25) | `core/store.py: hybrid_search()` mit Reciprocal Rank Fusion |
-| Reranking (Cohere) | `core/embeddings.py: rerank()` (lokaler Cross-Encoder) |
-| LLM-Generierung (Claude/GPT über OpenRouter) | `core/llm.py` (ruft die `claude` CLI headless auf, nutzt die bestehende Claude-Code-Subscription) |
+| Reranking (z.B. Cohere) | `core/embeddings.py: rerank()` (lokaler Cross-Encoder) |
+| LLM-Generierung (Cloud-API) | `core/llm.py` (ruft die `claude` CLI headless auf, nutzt die bestehende Claude-Code-Subscription) |
 
-Warum SQLite statt Cloud-Vektor-DB? Genau aus dem Grund, den das Video nennt:
-kein Vendor-Lock-in, eine einzelne Datei pro Domain, die du jederzeit
+Warum SQLite statt Cloud-Vektor-DB? Aus einem einfachen Grund: kein
+Vendor-Lock-in, eine einzelne Datei pro Domain, die du jederzeit
 exportierst, löschst oder versionierst.
 
 **Passt-alles-rein? Dann keine Suche.** Ist der Gesamttext einer Domain
@@ -76,7 +75,7 @@ Ordner Bauunterlagen sind je ~20–90k Token. Retrieval wäre da nicht nur
 Etage"* muss über einen ganzen Abschnitt zusammengezählt werden, und eine
 Auswahl von ein paar Chunks (zumal nach einem Reranker, der knappe
 Stichpunktlisten schlecht bewertet) liefert dann Lücken. Die Hybrid-Pipeline
-greift erst bei wirklich großen Beständen — genau dort, wo RAG laut Video
+greift erst bei wirklich großen Beständen — genau dort, wo Retrieval
 überhaupt nötig wird.
 
 ### Wo genau kommt ein LLM zum Einsatz?
@@ -149,8 +148,8 @@ statt nur ein paar Fragen von Hand durchzuklicken. Enthalten sind bewusst
 harte Fälle:
 
 - **Fast identische Ersatzteile mit unterschiedlicher Artikelnummer**
-  (`ersatzteilkatalog.md`) — der "Schneckenradsatz"-Test aus dem Video, bei
-  dem die *exakte* Artikelnummer zählt, nicht die bedeutungsähnlichste.
+  (`ersatzteilkatalog.md`) — der "Schneckenradsatz"-Fall, bei dem die
+  *exakte* Artikelnummer zählt, nicht die bedeutungsähnlichste.
 - **Ein synthetisch gescanntes PDF ohne Textebene** (`kaufbeleg_thinkpad_scan.pdf`),
   das nur über den Tesseract-OCR-Fallback lesbar wird.
 
@@ -161,7 +160,7 @@ ist klein, und weil alle vier Beispiel-Domains klein genug sind, laufen sie
 im Ganzes-Dokument-Modus (die Hybrid-Suche + Reranking + der
 Stoppwort-gefilterte FTS-Query-Bau werden deterministisch in
 `tests/test_rag.py` und `tests/test_store.py` geprüft). Bei Beständen jenseits
-des Kontextfensters (die Größenordnung, bei der RAG laut Video erst richtig
+des Kontextfensters (die Größenordnung, bei der Retrieval erst richtig
 relevant wird) ist weiterhin unklar, wie belastbar das bleibt.
 
 ## Eine neue Domain hinzufügen
@@ -210,9 +209,9 @@ Region, Arbeitsvertrag + Betriebsvereinbarungen.
   `.doc`, E-Mails, Excel) einfach eine weitere Funktion ergänzen.
 - **Anderes LLM-Backend**: `core/llm.py: generate_answer()` ersetzen, z.B.
   durch einen direkten Anthropic-/OpenAI-/Ollama-API-Call.
-- **Knowledge Graph / GraphRAG**: aktuell bewusst weggelassen (siehe Video:
-  "smarte, aber simple Lösungen gewinnen") — ließe sich als zusätzlicher
-  Store neben `store.py` ergänzen, wenn Fragen viele Entitäts-Hops brauchen.
+- **Knowledge Graph / GraphRAG**: aktuell bewusst weggelassen (einfache
+  Lösung zuerst) — ließe sich als zusätzlicher Store neben `store.py`
+  ergänzen, wenn Fragen viele Entitäts-Hops brauchen.
 
 ## Projektstruktur
 

@@ -1,6 +1,6 @@
-"""Paragraph-aware recursive chunking, matching the video's guidance:
-target ~800 chars, small (~10%) overlap -- not 50%, that's overkill.
-Splits on paragraph boundaries where possible so we don't cut mid-sentence.
+"""Paragraph-aware recursive chunking: target ~800 chars, small (~10%)
+overlap -- not 50%, that's overkill. Splits on paragraph boundaries where
+possible so we don't cut mid-sentence.
 """
 from __future__ import annotations
 

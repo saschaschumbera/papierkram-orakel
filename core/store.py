@@ -1,11 +1,9 @@
-"""Per-domain hybrid store: one SQLite file with two search paths, mirroring
-the video's Hybrid Search:
+"""Per-domain hybrid store: one SQLite file with two search paths:
 
   - vec_chunks (sqlite-vec):  semantic / cosine-ish nearest-neighbour search
   - fts_chunks (SQLite FTS5): BM25 lexical search (exact terms, IDs, names)
 
-Results from both are merged with Reciprocal Rank Fusion (RRF), exactly the
-mathematical trick named in the video.
+Results from both are merged with Reciprocal Rank Fusion (RRF).
 """
 from __future__ import annotations
 
@@ -178,7 +176,7 @@ def hybrid_search(
     top_k_final: int,
     rrf_k: int = 60,
 ) -> list[SearchResult]:
-    """Reciprocal Rank Fusion of vector + lexical search, as in the video:
+    """Reciprocal Rank Fusion of vector + lexical search:
     score(doc) = sum over both rankings of 1 / (rrf_k + rank)."""
     con = _connect(db_path)
     try:

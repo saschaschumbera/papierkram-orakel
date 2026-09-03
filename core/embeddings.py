@@ -1,4 +1,4 @@
-"""Local, free stand-ins for the video's Mistral-Embed / Cohere-Rerank steps.
+"""Local, free stand-ins for the usual hosted Embed / Rerank APIs.
 
 Both models are multilingual (German included), run on CPU and are loaded
 lazily so `python cli.py --help` doesn't pay the download/load cost.
