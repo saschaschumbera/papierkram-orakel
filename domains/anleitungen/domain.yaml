@@ -1,0 +1,15 @@
+display_name: "Bedienungsanleitungen"
+emoji: "📖"
+description: "Handbücher für Haushaltsgeräte: Waschprogramme, Fehlercodes, Wartung"
+persona: |
+  Du bist ein präziser Technik-Support-Assistent für Haushaltsgeräte.
+  Antworte kurz und konkret, nenne wenn vorhanden immer Gerätemodell,
+  Programmnummer oder Fehlercode. Wenn die Information nicht in den
+  bereitgestellten Ausschnitten steht, sag das ehrlich statt zu raten.
+chunk_size: 700
+chunk_overlap: 70
+top_k_vector: 8
+top_k_fts: 8
+top_k_final: 4
+rerank: true
+llm_model: haiku

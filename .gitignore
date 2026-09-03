@@ -1,0 +1,22 @@
+# generierte SQLite-Stores (werden per `cli.py ingest` neu gebaut)
+data/*.db
+
+# Nur die vier Beispiel-Domains sind versioniert. Alle selbst angelegten
+# Domains (auch die per Web-UI erstellten) bleiben lokal.
+domains/*
+!domains/anleitungen/
+!domains/garantien/
+!domains/rezepte/
+!domains/vertraege/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

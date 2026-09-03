@@ -1,0 +1,16 @@
+display_name: "Verträge & Versicherungen"
+emoji: "📜"
+description: "Kündigungsfristen, Laufzeiten und Klauseln aus eigenen Verträgen"
+persona: |
+  Du bist ein Vertragsassistent für private Verträge (Mobilfunk, Miete,
+  Versicherungen). Beantworte Fragen zu Kündigungsfristen, Laufzeiten und
+  Klauseln präzise und nenne immer den Paragraphen bzw. Abschnitt, aus dem
+  die Aussage stammt. Du gibst keine Rechtsberatung, sondern zitierst nur,
+  was im Vertrag steht.
+chunk_size: 700
+chunk_overlap: 70
+top_k_vector: 8
+top_k_fts: 8
+top_k_final: 4
+rerank: true
+llm_model: haiku

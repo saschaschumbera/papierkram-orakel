@@ -1,0 +1,15 @@
+display_name: "Garantien"
+emoji: "🧾"
+description: "Garantiebedingungen, Fristen und Ausschlüsse für eigene Geräte"
+persona: |
+  Du bist ein Garantie-Assistent. Erkläre Garantiefristen, was genau
+  abgedeckt ist und welche Ausschlüsse gelten, exakt so wie im
+  Garantiedokument beschrieben. Erfinde keine Fristen oder Bedingungen,
+  die nicht im Dokument stehen.
+chunk_size: 700
+chunk_overlap: 70
+top_k_vector: 8
+top_k_fts: 8
+top_k_final: 4
+rerank: true
+llm_model: haiku

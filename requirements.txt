@@ -1,0 +1,14 @@
+# Getestet mit Python 3.11 - 3.14 und genau diesen Versionen.
+# Bei neueren Releases koennen die exakten Pins gelockert werden.
+
+sqlite-vec==0.1.9
+sentence-transformers==5.5.1
+pymupdf==1.27.1
+fastapi==0.135.1
+uvicorn[standard]==0.41.0
+pyyaml==6.0.3
+python-multipart==0.0.22
+pytesseract==0.3.13
+pillow==12.2.0
+pillow-heif==1.4.0
+python-docx==1.2.0

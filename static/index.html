@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Papierkram-Orakel</title>
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --surface: #ffffff;
+    --text: #1c1b1a;
+    --muted: #6b6862;
+    --border: #e4e1da;
+    --accent: #8a5a2b;
+    --accent-soft: #f1e4d4;
+    --bubble-user: #2b2a28;
+    --bubble-user-text: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161513;
+      --surface: #211f1c;
+      --text: #f1efe9;
+      --muted: #a39d8f;
+      --border: #35322c;
+      --accent: #d9a25c;
+      --accent-soft: #3a2f22;
+      --bubble-user: #d9a25c;
+      --bubble-user-text: #1c1b1a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header {
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  header h1 {
+    margin: 0 0 .15rem;
+    font-size: 1.25rem;
+  }
+  header p {
+    margin: 0 0 .85rem;
+    color: var(--muted);
+    font-size: .85rem;
+  }
+  #domains {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .domain-pill {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 999px;
+    padding: .4rem .9rem;
+    font-size: .85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    transition: background .15s, border-color .15s;
+  }
+  .domain-pill:hover { border-color: var(--accent); }
+  .domain-pill.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .domain-pill.ghost {
+    border-style: dashed;
+    color: var(--muted);
+  }
+  .chunk-badge {
+    font-size: .68rem;
+    background: var(--border);
+    border-radius: 999px;
+    padding: .05rem .45rem;
+    color: var(--muted);
+  }
+  .panel {
+    max-width: 760px;
+    margin: .75rem auto 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .9rem 1rem;
+  }
+  .panel h3 {
+    margin: 0 0 .6rem;
+    font-size: .85rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+  .panel label {
+    display: block;
+    font-size: .78rem;
+    color: var(--muted);
+    margin: .5rem 0 .2rem;
+  }
+  .panel input[type=text], .panel textarea {
+    width: 100%;
+    padding: .55rem .7rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: .88rem;
+    font-family: inherit;
+  }
+  .panel textarea { resize: vertical; min-height: 3.5rem; }
+  .panel-row { display: flex; gap: .5rem; }
+  .panel-row > div { flex: 1; }
+  .panel-actions {
+    margin-top: .7rem;
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn-small {
+    padding: .45rem .85rem;
+    font-size: .82rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: var(--surface);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-small:disabled { opacity: .5; cursor: default; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .status-text { font-size: .8rem; color: var(--muted); }
+  .status-text.error { color: #b23b3b; }
+  .status-text.ok { color: #3b8a5a; }
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    font-size: .82rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .dropzone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin: .6rem 0;
+  }
+  .file-chip {
+    font-size: .74rem;
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: .2rem .5rem;
+  }
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .msg { margin-bottom: 1.1rem; display: flex; }
+  .msg.user { justify-content: flex-end; }
+  .bubble {
+    max-width: 80%;
+    padding: .65rem .9rem;
+    border-radius: 14px;
+    line-height: 1.45;
+    font-size: .93rem;
+    white-space: pre-wrap;
+  }
+  .msg.user .bubble {
+    background: var(--bubble-user);
+    color: var(--bubble-user-text);
+    border-bottom-right-radius: 3px;
+  }
+  .msg.assistant .bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 3px;
+  }
+  .msg.assistant .wrap { max-width: 90%; }
+  .sources {
+    margin-top: .5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+  }
+  .source-chip {
+    font-size: .72rem;
+    color: var(--muted);
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: .2rem .5rem;
+  }
+  .empty-state {
+    color: var(--muted);
+    text-align: center;
+    margin-top: 3rem;
+    font-size: .9rem;
+  }
+  footer {
+    border-top: 1px solid var(--border);
+    padding: .85rem 1.25rem 1.1rem;
+    flex-shrink: 0;
+  }
+  form.chatform {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    gap: .5rem;
+  }
+  input[type=text] {
+    flex: 1;
+    padding: .7rem .9rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: .93rem;
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent); }
+  button {
+    padding: .7rem 1.2rem;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: var(--surface);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: .93rem;
+  }
+  button:disabled { opacity: .5; cursor: default; }
+  .thinking { color: var(--muted); font-style: italic; }
+  .bubble code {
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: .05rem .3rem;
+    font-size: .85em;
+  }
+  .backend-status {
+    font-size: .74rem;
+    color: var(--muted);
+    margin: 0 0 .7rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem .9rem;
+  }
+  .backend-status b { color: var(--text); font-weight: 600; }
+  .backend-status .warn { color: #b23b3b; }
+  .domain-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .7rem;
+  }
+  .domain-toolbar label { font-size: .78rem; color: var(--muted); }
+  .domain-toolbar select {
+    font: inherit;
+    font-size: .82rem;
+    padding: .3rem .45rem;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    margin-left: .35rem;
+  }
+  .file-chip { display: inline-flex; align-items: center; gap: .35rem; }
+  .file-chip button {
+    all: unset;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: .9rem;
+    line-height: 1;
+    padding: 0 .1rem;
+  }
+  .file-chip button:hover { color: #b23b3b; }
+  .answer-meta {
+    margin-top: .35rem;
+    font-size: .68rem;
+    color: var(--muted);
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📦 Papierkram-Orakel</h1>
+  <p>Frag den Ordner, den sonst niemand liest. Antworten inkl. Quellenangabe.</p>
+  <div class="backend-status" id="backend-status"></div>
+  <div id="domains"></div>
+
+  <div class="panel hidden" id="new-domain-panel">
+    <h3>Neue Domain anlegen</h3>
+    <div class="panel-row">
+      <div>
+        <label>Name</label>
+        <input type="text" id="nd-name" placeholder="z.B. Steuerunterlagen">
+      </div>
+      <div style="flex: 0 0 4.5rem;">
+        <label>Emoji</label>
+        <input type="text" id="nd-emoji" placeholder="📁" value="📁">
+      </div>
+    </div>
+    <label>Kurzbeschreibung</label>
+    <input type="text" id="nd-description" placeholder="Wofür ist diese Domain da?">
+    <label>Persona (optional)</label>
+    <textarea id="nd-persona" placeholder="Wie soll der Assistent antworten? (leer = Standard)"></textarea>
+    <div class="panel-actions">
+      <button class="btn-small" id="nd-create-btn">Anlegen</button>
+      <button class="btn-small btn-secondary" id="nd-cancel-btn">Abbrechen</button>
+      <span class="status-text" id="nd-status"></span>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="files-panel">
+    <h3>📁 Dateien in dieser Domain <span class="chunk-badge" id="files-chunk-badge"></span></h3>
+    <div class="domain-toolbar">
+      <label>Antwort-Modell:
+        <select id="model-select"></select>
+      </label>
+      <button class="btn-small btn-secondary" id="delete-domain-btn">Domain löschen</button>
+    </div>
+    <div class="file-list" id="files-list"></div>
+    <div class="dropzone" id="dropzone">
+      Dateien hierher ziehen oder klicken zum Auswählen
+      <br><small>PDF · DOCX · MD · TXT · JPG/PNG/HEIC</small>
+      <input type="file" id="file-input" multiple class="hidden">
+    </div>
+    <div class="panel-actions">
+      <button class="btn-small" id="ingest-btn">Jetzt indexieren</button>
+      <span class="status-text" id="files-status"></span>
+    </div>
+  </div>
+</header>
+<main id="chat">
+  <div class="empty-state" id="empty-state">Wähle eine Domain oben aus und stell deine erste Frage.</div>
+</main>
+<footer>
+  <form class="chatform" id="chat-form">
+    <input type="text" id="question" placeholder="Stell deine Frage..." autocomplete="off" disabled>
+    <button type="submit" id="send-btn" disabled>Fragen</button>
+  </form>
+</footer>
+
+<script>
+let currentDomain = null;
+
+let domainList = [];
+let availableModels = { haiku: "Claude Haiku" };
+
+function fmtK(n) {
+  return n >= 1000 ? Math.round(n / 1000) + "k" : String(n);
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+async function loadStatus() {
+  const el = document.getElementById("backend-status");
+  try {
+    const s = await (await fetch("/api/status")).json();
+    availableModels = s.models;
+    const claude = s.answer.available
+      ? `<b>Claude</b> via claude-CLI · ${escapeHtml(s.answer.location)}`
+      : `<span class="warn"><b>claude-CLI nicht gefunden</b> – Antworten schlagen fehl</span>`;
+    el.innerHTML =
+      `<span>🔍 Suche &amp; Ranking: <b>${escapeHtml(s.retrieval.location)}</b> `
+      + `(${escapeHtml(s.retrieval.embedding_model.split("/").pop())})</span>`
+      + `<span>💬 Antwort: ${claude}</span>`;
+  } catch {
+    el.textContent = "";
+  }
+}
+
+// Sehr kleine Markdown-Darstellung fuer die Antwort: erst escapen, dann nur
+// **fett** und `code` in Tags umsetzen. Zeilenumbrueche macht white-space: pre-wrap.
+function renderAnswer(s) {
+  return escapeHtml(s)
+    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`\n]+)`/g, "<code>$1</code>");
+}
+
+async function loadDomains(selectSlug) {
+  const res = await fetch("/api/domains");
+  const domains = await res.json();
+  domainList = domains;
+  const container = document.getElementById("domains");
+  container.innerHTML = "";
+
+  domains.forEach((d) => {
+    const btn = document.createElement("button");
+    btn.className = "domain-pill";
+    btn.innerHTML = `<span>${d.emoji}</span><span>${escapeHtml(d.display_name)}</span><span class="chunk-badge">${d.chunks} Chunks</span>`;
+    btn.title = d.description;
+    btn.onclick = () => selectDomain(d.slug, btn);
+    container.appendChild(btn);
+  });
+
+  const plusBtn = document.createElement("button");
+  plusBtn.className = "domain-pill ghost";
+  plusBtn.textContent = "+ Neue Domain";
+  plusBtn.onclick = () => togglePanel("new-domain-panel", true);
+  container.appendChild(plusBtn);
+
+  const target = selectSlug || (domains.length > 0 ? domains[0].slug : null);
+  if (target) {
+    const idx = domains.findIndex(d => d.slug === target);
+    if (idx >= 0) selectDomain(target, container.children[idx]);
+  }
+}
+
+function togglePanel(id, show) {
+  document.getElementById(id).classList.toggle("hidden", !show);
+}
+
+async function selectDomain(slug, btn) {
+  currentDomain = slug;
+  document.querySelectorAll(".domain-pill").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  document.getElementById("question").disabled = false;
+  document.getElementById("send-btn").disabled = false;
+  togglePanel("new-domain-panel", false);
+  togglePanel("files-panel", true);
+  renderModelSelect();
+  await refreshFiles();
+}
+
+function currentModel() {
+  const d = domainList.find(x => x.slug === currentDomain);
+  return (d && d.llm_model) || "haiku";
+}
+
+function renderModelSelect() {
+  const sel = document.getElementById("model-select");
+  const active = currentModel();
+  sel.innerHTML = Object.entries(availableModels)
+    .map(([id, label]) => `<option value="${id}"${id === active ? " selected" : ""}>${escapeHtml(label)}</option>`)
+    .join("");
+}
+
+document.getElementById("model-select").addEventListener("change", async (e) => {
+  if (!currentDomain) return;
+  const model = e.target.value;
+  const status = document.getElementById("files-status");
+  try {
+    const res = await fetch(`/api/domains/${currentDomain}/model`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Konnte Modell nicht setzen");
+    const d = domainList.find(x => x.slug === currentDomain);
+    if (d) d.llm_model = data.llm_model;
+    status.textContent = `Antwort-Modell: ${availableModels[model] || model}`;
+    status.className = "status-text ok";
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = "status-text error";
+  }
+});
+
+document.getElementById("delete-domain-btn").addEventListener("click", async (e) => {
+  if (!currentDomain) return;
+  const btn = e.target;
+  if (btn.dataset.armed !== "1") {
+    btn.dataset.armed = "1";
+    btn.textContent = "Wirklich löschen?";
+    setTimeout(() => { btn.dataset.armed = "0"; btn.textContent = "Domain löschen"; }, 4000);
+    return;
+  }
+  btn.dataset.armed = "0";
+  btn.textContent = "Domain löschen";
+  const slug = currentDomain;
+  const res = await fetch(`/api/domains/${slug}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    document.getElementById("files-status").textContent = data.detail || "Löschen fehlgeschlagen";
+    document.getElementById("files-status").className = "status-text error";
+    return;
+  }
+  currentDomain = null;
+  await loadDomains();
+  if (domainList.length === 0) {
+    togglePanel("files-panel", false);
+    document.getElementById("question").disabled = true;
+    document.getElementById("send-btn").disabled = true;
+  }
+});
+
+async function refreshFiles() {
+  if (!currentDomain) return;
+  const res = await fetch(`/api/domains/${currentDomain}/files`);
+  const data = await res.json();
+  document.getElementById("files-chunk-badge").textContent = `${data.chunks} Chunks indexiert`;
+  const list = document.getElementById("files-list");
+  if (!data.files.length) {
+    list.innerHTML = `<span class="status-text">Noch keine Dateien hochgeladen.</span>`;
+    return;
+  }
+  list.innerHTML = "";
+  data.files.forEach(f => {
+    const chip = document.createElement("span");
+    chip.className = "file-chip";
+    chip.innerHTML = `${escapeHtml(f)} <button title="Datei entfernen">&times;</button>`;
+    chip.querySelector("button").onclick = () => deleteFile(f);
+    list.appendChild(chip);
+  });
+}
+
+async function deleteFile(name) {
+  if (!currentDomain) return;
+  const status = document.getElementById("files-status");
+  const res = await fetch(
+    `/api/domains/${currentDomain}/files?name=${encodeURIComponent(name)}`,
+    { method: "DELETE" }
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    status.textContent = data.detail || "Löschen fehlgeschlagen";
+    status.className = "status-text error";
+    return;
+  }
+  status.textContent = `"${name}" entfernt – zum Übernehmen neu indexieren.`;
+  status.className = "status-text";
+  await refreshFiles();
+}
+
+document.getElementById("nd-create-btn").addEventListener("click", async () => {
+  const display_name = document.getElementById("nd-name").value.trim();
+  const emoji = document.getElementById("nd-emoji").value.trim() || "📁";
+  const description = document.getElementById("nd-description").value.trim();
+  const persona = document.getElementById("nd-persona").value.trim();
+  const status = document.getElementById("nd-status");
+
+  if (!display_name) {
+    status.textContent = "Bitte einen Namen angeben.";
+    status.className = "status-text error";
+    return;
+  }
+  status.textContent = "Lege an ...";
+  status.className = "status-text";
+  try {
+    const res = await fetch("/api/domains", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ display_name, emoji, description, persona: persona || null })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Fehler beim Anlegen");
+    document.getElementById("nd-name").value = "";
+    document.getElementById("nd-description").value = "";
+    document.getElementById("nd-persona").value = "";
+    status.textContent = "";
+    await loadDomains(data.slug);
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = "status-text error";
+  }
+});
+
+document.getElementById("nd-cancel-btn").addEventListener("click", () => {
+  togglePanel("new-domain-panel", false);
+});
+
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("file-input");
+
+dropzone.addEventListener("click", () => fileInput.click());
+dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("dragover"); });
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropzone.classList.remove("dragover");
+  uploadFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener("change", () => uploadFiles(fileInput.files));
+
+async function uploadFiles(fileList) {
+  if (!currentDomain || !fileList.length) return;
+  const status = document.getElementById("files-status");
+  status.textContent = `Lade ${fileList.length} Datei(en) hoch ...`;
+  status.className = "status-text";
+
+  const form = new FormData();
+  form.append("domain", currentDomain);
+  Array.from(fileList).forEach(f => form.append("files", f));
+
+  try {
+    const res = await fetch("/api/upload", { method: "POST", body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Upload fehlgeschlagen");
+    let msg = `${data.saved.length} Datei(en) hochgeladen.`;
+    if (data.skipped.length) msg += ` Übersprungen (Format nicht unterstützt): ${data.skipped.join(", ")}`;
+    status.textContent = msg;
+    status.className = "status-text ok";
+    await refreshFiles();
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = "status-text error";
+  }
+  fileInput.value = "";
+}
+
+document.getElementById("ingest-btn").addEventListener("click", async () => {
+  if (!currentDomain) return;
+  const status = document.getElementById("files-status");
+  const btn = document.getElementById("ingest-btn");
+  btn.disabled = true;
+  status.textContent = "Indexiere ... (beim ersten Mal werden Embedding-Modelle heruntergeladen, das kann etwas dauern)";
+  status.className = "status-text";
+  try {
+    const res = await fetch("/api/ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain: currentDomain })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Indexierung fehlgeschlagen");
+    status.textContent = `Fertig: ${data.chunks} Chunks gespeichert.`;
+    status.className = "status-text ok";
+    await refreshFiles();
+    await loadDomains(currentDomain);
+  } catch (err) {
+    status.textContent = err.message;
+    status.className = "status-text error";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function addMessage(role, html) {
+  const chat = document.getElementById("chat");
+  const empty = document.getElementById("empty-state");
+  if (empty) empty.remove();
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.innerHTML = html;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+document.getElementById("chat-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = document.getElementById("question");
+  const question = input.value.trim();
+  if (!question || !currentDomain) return;
+  input.value = "";
+
+  addMessage("user", `<div class="bubble">${escapeHtml(question)}</div>`);
+  const thinkingDiv = addMessage("assistant", `<div class="wrap"><div class="bubble thinking">Durchsuche Wissensbasis ...</div></div>`);
+
+  document.getElementById("send-btn").disabled = true;
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain: currentDomain, question, model: currentModel() })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Unbekannter Fehler");
+
+    let sourcesHtml = "";
+    if (data.sources && data.sources.length) {
+      const chips = data.sources
+        .map(s => {
+          const label = s.location ? `${escapeHtml(s.source)} · ${escapeHtml(s.location)}` : escapeHtml(s.source);
+          const title = s.excerpt ? ` title="${escapeHtml(s.excerpt)}"` : "";
+          return `<span class="source-chip"${title}>${label}</span>`;
+        })
+        .join("");
+      sourcesHtml = `<div class="sources">${chips}</div>`;
+    }
+    const retrievalLabel = data.retrieval === "ganzes-dokument"
+      ? "ganzes Dokument im Kontext"
+      : "Top-Treffer der Hybrid-Suche";
+    let tokenLabel = "";
+    if (data.context_tokens) {
+      tokenLabel = ` · ~${fmtK(data.context_tokens)} Token Dokument-Kontext`;
+      if (data.cached_tokens) tokenLabel += " (Prompt-Cache aktiv)";
+    }
+    const meta = `<div class="answer-meta">beantwortet von ${escapeHtml(availableModels[data.model] || data.model)} · ${retrievalLabel}${tokenLabel}</div>`;
+    thinkingDiv.innerHTML = `<div class="wrap"><div class="bubble">${renderAnswer(data.answer)}</div>${sourcesHtml}${meta}</div>`;
+  } catch (err) {
+    thinkingDiv.innerHTML = `<div class="wrap"><div class="bubble">⚠️ ${escapeHtml(err.message)}</div></div>`;
+  } finally {
+    document.getElementById("send-btn").disabled = false;
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+  }
+});
+
+loadStatus().then(loadDomains);
+</script>
+</body>
+</html>
